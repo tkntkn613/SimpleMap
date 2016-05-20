@@ -1,6 +1,7 @@
 package jp.ac.titech.itpro.sdl.simplemap;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -10,6 +11,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -24,15 +27,21 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import android.view.View.OnClickListener;
 
 public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, OnClickListener {
+
     private final static String TAG = "MainActivity";
 
     private GoogleMap googleMap;
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
     private boolean requestingLocationUpdate;
+    private Button curposButton;
+
+    private boolean posUpdated = false;
+    private double lati = 0.0, longi = 0.0;
 
     private enum UpdatingState {STOPPED, REQUESTING, STARTED}
 
@@ -63,10 +72,14 @@ public class MainActivity extends AppCompatActivity implements
                 .addApi(LocationServices.API)
                 .build();
 
+        curposButton = (Button)findViewById(R.id.current_pos_button);
+
         locationRequest = new LocationRequest();
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
         locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+
+        curposButton.setOnClickListener(this);
     }
 
     @Override
@@ -121,8 +134,11 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onLocationChanged(Location location) {
         Log.d(TAG, "onLocationChanged: " + location);
-        googleMap.animateCamera(CameraUpdateFactory
-                .newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
+        lati = location.getLatitude();
+        longi = location.getLongitude();
+        posUpdated = true;
+        //googleMap.animateCamera(CameraUpdateFactory
+        //        .newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
     }
 
     @Override
@@ -157,5 +173,16 @@ public class MainActivity extends AppCompatActivity implements
         Log.d(TAG, "stopLocationUpdate");
         LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
         state = UpdatingState.STOPPED;
+    }
+
+    public void onClick(View view) {
+        switch(view.getId()) {
+            case R.id.current_pos_button:
+                if(posUpdated) {
+                    googleMap.animateCamera(CameraUpdateFactory
+                            .newLatLng(new LatLng(lati, longi)));
+                }
+                break;
+        }
     }
 }

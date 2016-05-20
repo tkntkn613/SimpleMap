@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">SimpleMap</string>
+    <string name="curpos_btn">現在地へ</string>
     <string name="toast_requires_permission">This application requires permission %s</string>
 </resources>
